@@ -25,29 +25,40 @@ const roundSettings = {
     "1/16 Final": { duration: 5, passNext: 96 }
 };
 
+// Initialize the application
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize elements
     const addDanceCategoryBtn = document.getElementById('addDanceCategoryBtn');
     const addTechBreakBtn = document.getElementById('addTechBreakBtn');
     const generatePdfBtn = document.getElementById('generatePdfBtn');
     const clearScheduleBtn = document.getElementById('clearScheduleBtn');
+    const saveProjectBtn = document.getElementById('saveProjectBtn');
+    const loadProjectBtn = document.getElementById('loadProjectBtn');
+    const projectFileInput = document.getElementById('projectFileInput');
     const floorsCountInput = document.getElementById('floorsCount');
     
+    // Add event listeners
     addDanceCategoryBtn.addEventListener('click', addDanceCategory);
     addTechBreakBtn.addEventListener('click', addTechnicalBreak);
     generatePdfBtn.addEventListener('click', generatePDF);
     clearScheduleBtn.addEventListener('click', clearSchedule);
+    saveProjectBtn.addEventListener('click', saveProject);
+    loadProjectBtn.addEventListener('click', () => projectFileInput.click());
+    projectFileInput.addEventListener('change', loadProject);
     floorsCountInput.addEventListener('change', updateFloorsCount);
     
     // Initialize with current time
     currentTime = document.getElementById('startTime').value || '09:00';
 });
 
+// Update number of floors
 function updateFloorsCount() {
     floorsCount = parseInt(document.getElementById('floorsCount').value) || 1;
     floorNumber = floorNumber > floorsCount ? 1 : floorNumber;
     updateScheduleTable();
 }
 
+// Add a dance category to the schedule
 function addDanceCategory() {
     const category = document.getElementById('categorySelect').value;
     const dancesSelect = document.getElementById('dancesSelect');
@@ -110,6 +121,7 @@ function addDanceCategory() {
     document.getElementById('generatePdfBtn').disabled = false;
 }
 
+// Add a technical break to the schedule
 function addTechnicalBreak() {
     const breakName = document.getElementById('techBreakName').value.trim();
     const duration = parseInt(document.getElementById('techBreakDuration').value);
@@ -150,6 +162,7 @@ function addTechnicalBreak() {
     document.getElementById('techBreakDuration').value = '30';
 }
 
+// Calculate number of heats needed
 function calculateHeats(participants, round) {
     const roundInfo = roundSettings[round] || { passNext: 6 };
     const maxPerHeat = 6; // Maximum couples per heat
@@ -161,6 +174,7 @@ function calculateHeats(participants, round) {
     return Math.ceil(participants / Math.min(maxPerHeat * 2, roundInfo.passNext * 2));
 }
 
+// Update the schedule table display
 function updateScheduleTable() {
     const tbody = document.getElementById('scheduleBody');
     tbody.innerHTML = '';
@@ -209,6 +223,7 @@ function updateScheduleTable() {
     });
 }
 
+// Delete a schedule item
 function deleteScheduleItem(id) {
     schedule = schedule.filter(item => item.id !== id);
     recalculateTimes();
@@ -218,6 +233,7 @@ function deleteScheduleItem(id) {
     }
 }
 
+// Edit start time of a schedule item
 function editScheduleItemTime(id) {
     const item = schedule.find(item => item.id === id);
     if (!item) return;
@@ -235,6 +251,7 @@ function editScheduleItemTime(id) {
     updateScheduleTable();
 }
 
+// Recalculate all times after modification
 function recalculateTimes() {
     if (schedule.length === 0) return;
     
@@ -255,6 +272,7 @@ function recalculateTimes() {
     }
 }
 
+// Add minutes to a time string
 function addMinutes(time, minutes) {
     const [hours, mins] = time.split(':').map(Number);
     const date = new Date();
@@ -262,6 +280,7 @@ function addMinutes(time, minutes) {
     return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
 }
 
+// Clear the entire schedule
 function clearSchedule() {
     if (confirm('Are you sure you want to clear the entire schedule?')) {
         schedule = [];
@@ -272,6 +291,74 @@ function clearSchedule() {
     }
 }
 
+// Save project to JSON file
+function saveProject() {
+    if (schedule.length === 0) {
+        alert('No schedule to save');
+        return;
+    }
+
+    const projectData = {
+        eventName: document.getElementById('eventName').value,
+        eventDate: document.getElementById('eventDate').value,
+        startTime: document.getElementById('startTime').value,
+        floorsCount: document.getElementById('floorsCount').value,
+        schedule: schedule,
+        currentTime: currentTime,
+        floorNumber: floorNumber
+    };
+
+    const dataStr = JSON.stringify(projectData, null, 2);
+    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+    
+    const exportName = (document.getElementById('eventName').value || 'dance_schedule') + '.json';
+    
+    const linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataUri);
+    linkElement.setAttribute('download', exportName);
+    linkElement.click();
+}
+
+// Load project from JSON file
+function loadProject(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const projectData = JSON.parse(e.target.result);
+            
+            // Validate the loaded data
+            if (!projectData.schedule || !Array.isArray(projectData.schedule)) {
+                throw new Error('Invalid project file format');
+            }
+
+            // Restore settings
+            document.getElementById('eventName').value = projectData.eventName || '';
+            document.getElementById('eventDate').value = projectData.eventDate || '';
+            document.getElementById('startTime').value = projectData.startTime || '09:00';
+            document.getElementById('floorsCount').value = projectData.floorsCount || 1;
+            
+            // Restore schedule
+            schedule = projectData.schedule;
+            currentTime = projectData.currentTime || projectData.startTime || '09:00';
+            floorNumber = projectData.floorNumber || 1;
+            floorsCount = projectData.floorsCount || 1;
+            
+            updateScheduleTable();
+            document.getElementById('generatePdfBtn').disabled = schedule.length === 0;
+            
+            alert('Project loaded successfully!');
+        } catch (error) {
+            console.error('Error loading project:', error);
+            alert('Error loading project: ' + error.message);
+        }
+    };
+    reader.readAsText(file);
+}
+
+// Generate PDF from schedule
 function generatePDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({
@@ -345,106 +432,8 @@ function generatePDF() {
     doc.save('Dance_Schedule.pdf');
 }
 
+// Format date for display
 function formatDate(dateString) {
     const options = { year: 'numeric', month: 'long', day: 'numeric' };
     return new Date(dateString).toLocaleDateString('en-US', options);
 }
-
-// Save project to JSON file
-function saveProject() {
-    if (schedule.length === 0) {
-        alert('No schedule to save');
-        return;
-    }
-
-    const projectData = {
-        eventName: document.getElementById('eventName').value,
-        eventDate: document.getElementById('eventDate').value,
-        startTime: document.getElementById('startTime').value,
-        floorsCount: document.getElementById('floorsCount').value,
-        schedule: schedule,
-        currentTime: currentTime,
-        floorNumber: floorNumber
-    };
-
-    const dataStr = JSON.stringify(projectData, null, 2);
-    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-    
-    const exportName = (document.getElementById('eventName').value || 'dance_schedule') + '.json';
-    
-    const linkElement = document.createElement('a');
-    linkElement.setAttribute('href', dataUri);
-    linkElement.setAttribute('download', exportName);
-    linkElement.click();
-}
-
-// Load project from JSON file
-function loadProject(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        try {
-            const projectData = JSON.parse(e.target.result);
-            
-            // Validate the loaded data
-            if (!projectData.schedule || !Array.isArray(projectData.schedule)) {
-                throw new Error('Invalid project file format');
-            }
-
-            // Restore settings
-            document.getElementById('eventName').value = projectData.eventName || '';
-            document.getElementById('eventDate').value = projectData.eventDate || '';
-            document.getElementById('startTime').value = projectData.startTime || '09:00';
-            document.getElementById('floorsCount').value = projectData.floorsCount || 1;
-            
-            // Restore schedule
-            schedule = projectData.schedule;
-            currentTime = projectData.currentTime || projectData.startTime || '09:00';
-            floorNumber = projectData.floorNumber || 1;
-            floorsCount = projectData.floorsCount || 1;
-            
-            updateScheduleTable();
-            document.getElementById('generatePdfBtn').disabled = schedule.length === 0;
-            
-            alert('Project loaded successfully!');
-        } catch (error) {
-            console.error('Error loading project:', error);
-            alert('Error loading project: ' + error.message);
-        }
-    };
-    reader.readAsText(file);
-}
-
-// Add to your existing DOMContentLoaded event listener:
-document.addEventListener('DOMContentLoaded', function() {
-    // ... existing code ...
-    
-    // Add save/load buttons
-    const saveBtn = document.createElement('button');
-    saveBtn.className = 'btn btn-secondary me-2';
-    saveBtn.textContent = 'Save Project';
-    saveBtn.addEventListener('click', saveProject);
-    
-    const loadBtn = document.createElement('button');
-    loadBtn.className = 'btn btn-outline-primary me-2';
-    loadBtn.textContent = 'Load Project';
-    
-    const fileInput = document.createElement('input');
-    fileInput.type = 'file';
-    fileInput.accept = '.json';
-    fileInput.style.display = 'none';
-    fileInput.addEventListener('change', loadProject);
-    
-    loadBtn.addEventListener('click', function() {
-        fileInput.value = ''; // Reset to allow reloading same file
-        fileInput.click();
-    });
-    
-    // Insert buttons next to existing ones
-    const btnGroup = document.querySelector('.card-header div');
-    btnGroup.insertBefore(saveBtn, btnGroup.firstChild);
-    btnGroup.insertBefore(loadBtn, btnGroup.firstChild);
-    document.body.appendChild(fileInput);
-});
