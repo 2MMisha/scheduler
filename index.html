@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dance Competition Schedule Generator</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .category-card { margin-bottom: 20px; border: 1px solid #ddd; padding: 15px; border-radius: 5px; }
+        #scheduleTable { font-size: 0.9rem; }
+        #scheduleTable th { background-color: #f8f9fa; position: sticky; top: 0; }
+        .table-container { max-height: 500px; overflow-y: auto; }
+        .nav-tabs .nav-link.active { font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <h1 class="mb-4">Dance Competition Schedule Generator</h1>
+        
+        <div class="row">
+            <div class="col-md-5">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5>Competition Settings</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Event Name</label>
+                            <input type="text" class="form-control" id="eventName">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Event Date</label>
+                            <input type="date" class="form-control" id="eventDate">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Start Time</label>
+                            <input type="time" class="form-control" id="startTime" value="09:00">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Number of Floors</label>
+                            <input type="number" class="form-control" id="floorsCount" min="1" value="1">
+                        </div>
+                    </div>
+                </div>
+                
+                <ul class="nav nav-tabs mb-3" id="categoryTabs">
+                    <li class="nav-item">
+                        <button class="nav-link active" id="dance-tab" data-bs-toggle="tab" data-bs-target="#danceCategory">Dance Category</button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" id="technical-tab" data-bs-toggle="tab" data-bs-target="#technicalCategory">Technical Break</button>
+                    </li>
+                </ul>
+                
+                <div class="tab-content">
+                    <div class="tab-pane fade show active" id="danceCategory">
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label class="form-label">Category</label>
+                                    <select class="form-select" id="categorySelect">
+                                        <option value="Medalists">Medalists</option>
+                                        <option value="Children 1">Children 1</option>
+                                        <option value="Children 2">Children 2</option>
+                                        <option value="Juniors 1">Juniors 1</option>
+                                        <option value="Juniors 2">Juniors 2</option>
+                                        <option value="Youth">Youth</option>
+                                        <option value="Adults">Adults</option>
+                                        <option value="Under 21">Under 21</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Dances</label>
+                                    <select class="form-select" id="dancesSelect" multiple>
+                                        <option value="Waltz">Waltz</option>
+                                        <option value="Tango">Tango</option>
+                                        <option value="Viennese Waltz">Viennese Waltz</option>
+                                        <option value="Foxtrot">Foxtrot</option>
+                                        <option value="Quickstep">Quickstep</option>
+                                        <option value="Samba">Samba</option>
+                                        <option value="Cha Cha">Cha Cha</option>
+                                        <option value="Rumba">Rumba</option>
+                                        <option value="Paso Doble">Paso Doble</option>
+                                        <option value="Jive">Jive</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Number of Couples</label>
+                                    <input type="number" class="form-control" id="participantsCount" min="1" value="10">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Rounds</label>
+                                    <select class="form-select" id="roundsSelect" multiple>
+                                        <option value="Final">Final</option>
+                                        <option value="Semi-final">Semi-final</option>
+                                        <option value="Quarter-final">Quarter-final</option>
+                                        <option value="1/8 Final">1/8 Final</option>
+                                        <option value="1/16 Final">1/16 Final</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Scoring System</label>
+                                    <select class="form-select" id="scoringSystem">
+                                        <option value="Skating">Skating</option>
+                                        <option value="Ranking">Ranking</option>
+                                        <option value="Mixed">Mixed</option>
+                                    </select>
+                                </div>
+                                <button class="btn btn-primary" id="addDanceCategoryBtn">Add Dance Category</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="tab-pane fade" id="technicalCategory">
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label class="form-label">Break Name/Description</label>
+                                    <input type="text" class="form-control" id="techBreakName" placeholder="e.g., Lunch Break, Award Ceremony">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Duration (minutes)</label>
+                                    <input type="number" class="form-control" id="techBreakDuration" min="1" value="30">
+                                </div>
+                                <button class="btn btn-primary" id="addTechBreakBtn">Add Technical Break</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-7">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5>Schedule</h5>
+                        <div>
+                            <button class="btn btn-secondary me-2" id="clearScheduleBtn">Clear All</button>
+                            <button class="btn btn-success" id="generatePdfBtn" disabled>Download PDF</button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-container">
+                            <table class="table table-bordered table-hover" id="scheduleTable">
+                                <thead>
+                                    <tr>
+                                        <th>Start Time</th>
+                                        <th>Category</th>
+                                        <th>Dances</th>
+                                        <th>Floor #</th>
+                                        <th>Couples</th>
+                                        <th>Advance</th>
+                                        <th>Heats</th>
+                                        <th>Scoring</th>
+                                        <th>Duration</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="scheduleBody">
+                                    <!-- Schedule rows will be added here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
