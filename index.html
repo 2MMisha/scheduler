@@ -10,6 +10,7 @@
         #scheduleTable th { background-color: #f8f9fa; position: sticky; top: 0; }
         .table-container { max-height: 500px; overflow-y: auto; }
         .nav-tabs .nav-link.active { font-weight: bold; }
+        .file-input { display: none; }
     </style>
 </head>
 <body>
@@ -133,6 +134,9 @@
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h5>Schedule</h5>
                         <div>
+                            <button class="btn btn-secondary me-2" id="saveProjectBtn">Save Project</button>
+                            <button class="btn btn-outline-primary me-2" id="loadProjectBtn">Load Project</button>
+                            <input type="file" id="projectFileInput" class="file-input" accept=".json">
                             <button class="btn btn-secondary me-2" id="clearScheduleBtn">Clear All</button>
                             <button class="btn btn-success" id="generatePdfBtn" disabled>Download PDF</button>
                         </div>
